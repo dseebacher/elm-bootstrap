@@ -131,6 +131,15 @@ type TableHeadOption msg
     | HeadAttr (Html.Attribute msg)
 
 
+
+-- {-| Opaque type representing possible styling options for a tfoot element
+-- -}
+-- type TableFootOption msg
+--     = InversedFoot
+--     | DefaultFoot
+--     | FootAttr (Html.Attribute msg)
+
+
 {-| Opaque type representing possible styling options for a tr element (both in thead and tbody)
 -}
 type RowOption msg
@@ -185,6 +194,15 @@ type alias CellConfig msg =
 -}
 type THead msg
     = THead
+        { options : List (TableHeadOption msg)
+        , rows : List (Row msg)
+        }
+
+
+{-| Opaque type representing a tfoot element
+-}
+type TFoot msg
+    = TFoot
         { options : List (TableHeadOption msg)
         , rows : List (Row msg)
         }
@@ -278,11 +296,12 @@ responsiveXl =
   - (`thead`, `tbody`) - A tuple of a thead item and a tbody item
 
 -}
-simpleTable : ( THead msg, TBody msg ) -> Html.Html msg
-simpleTable ( thead, tbody ) =
+simpleTable : ( THead msg, TFoot msg, TBody msg ) -> Html.Html msg
+simpleTable ( thead, tfoot, tbody ) =
     table
         { options = []
         , thead = thead
+        , tfoot = tfoot
         , tbody = tbody
         }
 
@@ -306,6 +325,7 @@ attr attr =
 table :
     { options : List (TableOption msg)
     , thead : THead msg
+    , tfoot : TFoot msg
     , tbody : TBody msg
     }
     -> Html.Html msg
@@ -320,6 +340,7 @@ table { options, thead, tbody } =
         Html.table
             (tableAttributes classOptions)
             [ maybeMapInversedTHead isInversed thead |> renderTHead
+            , maybeMapInversedTHeadOrTFoot isInversed (Foot foot) |> renderTFoot
             , maybeMapInversedTBody isInversed tbody |> renderTBody
             ]
             |> maybeWrapResponsive options
@@ -335,6 +356,16 @@ isResponsive option =
             False
 
 
+
+-- maybeMapInversedTFoot : Bool -> TFoot msg -> TFoot msg
+-- maybeMapInversedTFoot isTableInversed (TFoot tfoot)=
+
+
+type HeadOrFoot msg
+    = Head (THead msg)
+    | Foot (TFoot msg)
+
+
 maybeMapInversedTHead : Bool -> THead msg -> THead msg
 maybeMapInversedTHead isTableInversed (THead thead) =
     let
@@ -347,6 +378,31 @@ maybeMapInversedTHead isTableInversed (THead thead) =
             thead
         )
             |> THead
+
+
+maybeMapInversedTHeadOrTFoot : Bool -> HeadOrFoot msg -> HeadOrFoot msg
+maybeMapInversedTHeadOrTFoot isTableInversed headOrFoot =
+    let
+        isHeadInversed =
+            (\item ->
+                List.any (\opt -> opt == InversedHead) item.options
+            )
+
+        maybeInvert =
+            (\item ->
+                (if (isTableInversed || isHeadInversed item) then
+                    { item | rows = List.map mapInversedRow item.rows }
+                 else
+                    item
+                )
+            )
+    in
+        case headOrFoot of
+            Head (THead thead) ->
+                maybeInvert thead |> THead |> Head
+
+            Foot (TFoot tfoot) ->
+                maybeInvert tfoot |> THead |> Head
 
 
 maybeMapInversedTBody : Bool -> TBody msg -> TBody msg
