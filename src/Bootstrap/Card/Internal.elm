@@ -68,16 +68,6 @@ renderBlocks blocks =
         blocks
 
 
-renderBlock : CardBlock msg -> Html.Html msg
-renderBlock block =
-    case block of
-        CardBlock e ->
-            e
-
-        ListGroup e ->
-            e
-
-
 block :
     List (BlockOption msg)
     -> List (BlockItem msg)

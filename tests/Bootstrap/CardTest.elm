@@ -28,52 +28,76 @@ emptySimpleCard =
             ]
 
 
-notSoSimpleCard : Test
-notSoSimpleCard =
+cardBlock : Test
+cardBlock =
     let
         html =
-            Card.config
-                [ Card.align Text.alignXsCenter
-                , Card.outlineInfo
-                ]
-                |> Card.block []
+            Card.config [ Card.info ]
+                |> Card.block
+                    [ Block.attrs [ Attr.class "my-class" ]
+                    , Block.align Text.alignXsCenter
+                    , Block.textColor Text.dark
+                    , Block.primary
+                    ]
                     [ Block.titleH1 [] [ Html.text "titleh1" ]
                     , Block.text [] [ Html.text "cardtext" ]
                     , Block.link [] [ Html.text "link" ]
                     , Block.quote [] [ Html.text "blockquote" ]
+                    , Block.custom <| Html.div [] [ Html.text "customel" ]
                     ]
                 |> Card.view
+        block =
+            html
+                |> Query.fromHtml
+                |> Query.find [ class "card-body"]
     in
-        describe "Simple card with options and items"
+        describe "Card block with options and items"
             [ test "expect classes" <|
                 \() ->
                     html
                         |> Query.fromHtml
-                        |> Query.has [ classes [ "card", "border-info", "text-center" ] ]
+                        |> Query.has [ classes [ "card", "bg-info" ] ]
             , test "expect title" <|
                 \() ->
-                    html
-                        |> Query.fromHtml
+                    block
                         |> Query.find [ tag "h1" ]
                         |> Query.has [ class "card-title", text "titleh1" ]
             , test "expect text paragraph" <|
                 \() ->
-                    html
-                        |> Query.fromHtml
+                    block
                         |> Query.find [ tag "p" ]
                         |> Query.has [ class "card-text", text "cardtext" ]
             , test "expect link" <|
                 \() ->
-                    html
-                        |> Query.fromHtml
+                    block
                         |> Query.find [ tag "a" ]
                         |> Query.has [ class "card-link", text "link" ]
             , test "expect blockquote" <|
                 \() ->
-                    html
-                        |> Query.fromHtml
+                    block
                         |> Query.find [ tag "blockquote" ]
                         |> Query.has [ class "card-blockquote", text "blockquote" ]
+            , test "expect custom element" <|
+                \() ->
+                    block
+                        |> Query.find [ tag "div" ]
+                        |> Query.has [ text "customel" ]
+            , test "expect custom attribute" <|
+                \() ->
+                    block
+                        |> Query.has [ class "my-class" ]
+            , test "expect dark color" <|
+                \() ->
+                    block
+                        |> Query.has [ class "text-dark" ]
+            , test "expect centered text" <|
+                \() ->
+                    block
+                        |> Query.has [ class "text-center" ]
+            , test "expect primary" <|
+                \() ->
+                    block
+                        |> Query.has [ class "bg-primary" ]
             ]
 
 
@@ -81,7 +105,12 @@ cardFullMonty : Test
 cardFullMonty =
     let
         html =
-            Card.config [ Card.outlineInfo, Card.attrs [ Attr.class "my-class" ], Card.textColor Text.dark ]
+            Card.config
+                [ Card.outlineInfo
+                , Card.align Text.alignXsCenter
+                , Card.attrs [ Attr.class "my-class" ]
+                , Card.textColor Text.dark
+                ]
                 |> Card.headerH1 [] [ Html.text "Header" ]
                 |> Card.footer [] [ Html.text "Footer" ]
                 |> Card.imgTop [ Attr.src "/imgtop.jpg" ] []
@@ -94,7 +123,7 @@ cardFullMonty =
                 \() ->
                     html
                         |> Query.fromHtml
-                        |> Query.has [ classes [ "card", "border-info" ] ]
+                        |> Query.has [ classes [ "card", "border-info", "text-center" ] ]
             , test "expect card header" <|
                 \() ->
                     html
